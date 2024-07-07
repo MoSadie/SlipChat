@@ -4,7 +4,7 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "MoSadie"
 name = "SlipChat"
-versionNumber = "0.0.1"
+versionNumber = "0.1.0"
 description = "Local HTTP server to send in-game announcements"
 websiteUrl = "https://github.com/MoSadie/SlipChat"
 containsNsfwContent = false

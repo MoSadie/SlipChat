@@ -15,7 +15,7 @@ namespace SlipChat
 
         private static ConfigEntry<bool> debugMode;
 
-        private static HttpListener listener;
+        private static HttpListener listener = null;
 
         internal static ManualLogSource Log;
 
@@ -25,7 +25,7 @@ namespace SlipChat
         {
             try
             {
-                Plugin.Log = base.Logger;
+                Log = base.Logger;
 
                 Log.LogInfo($"Game version: {Application.version}");
                 if (Application.version != COMPATIBLE_GAME_VERSION)
@@ -227,7 +227,8 @@ namespace SlipChat
         {
             Logger.LogInfo("Stopping server");
             // Stop server
-            listener.Close();
+            if (listener != null)
+                listener.Close();
         }
     }
 }
