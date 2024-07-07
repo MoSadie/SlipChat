@@ -25,6 +25,10 @@ target = "BepInEx/plugins/MoSadie-SlipInfo/com.mosadie.slipchat.dll"
 source = "./CHANGELOG.md"
 target = "./CHANGELOG.md"
 
+[[build.copy]]
+source = "./StreamDeck/com.mosadie.slipchat.streamDeckPlugin"
+target = "./com.mosadie.slipchat.streamDeckPlugin"
+
 [publish]
 repository = "https://thunderstore.io"
 communities = [ "slipstream-rogue-space", ]
