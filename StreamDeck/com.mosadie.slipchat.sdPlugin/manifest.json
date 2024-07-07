@@ -1,0 +1,47 @@
+{
+	"Name": "SlipChat",
+	"Version": "1.0.0.0",
+	"Author": "MoSadie",
+	"Actions": [
+		{
+			"Name": "Send Announcement",
+			"UUID": "com.mosadie.slipchat.sendannouncement",
+			"Icon": "imgs/actions/sendannouncement/icon",
+			"Tooltip": "Sends an announcement to the crew.",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/sendannouncement/key",
+					"TitleAlignment": "middle"
+				}
+			],
+			"PropertyInspectorPath": "pi.html"
+		}
+	],
+	"Category": "SlipChat",
+	"CategoryIcon": "imgs/plugin/category-icon",
+	"CodePath": "bin/plugin.js",
+	"Description": "Send Slipstream Captain Announcements from your Stream Deck!",
+	"Icon": "imgs/plugin/plugin-icon",
+	"SDKVersion": 2,
+	"Software": {
+		"MinimumVersion": "6.5"
+	},
+	"OS": [
+		{
+			"Platform": "mac",
+			"MinimumVersion": "10.15"
+		},
+		{
+			"Platform": "windows",
+			"MinimumVersion": "10"
+		}
+	],
+	"Nodejs": {
+		"Version": "20",
+		"Debug": "enabled"
+	},
+	"UUID": "com.mosadie.slipchat"
+}

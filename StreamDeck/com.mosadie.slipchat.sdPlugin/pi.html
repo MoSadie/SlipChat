@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <meta charset="utf-8" />
+        <script src="https://cdn.jsdelivr.net/gh/geekyeggo/sdpi-components@v2/dist/sdpi-components.js"></script>
+    </head>
+    <body>
+        <sdpi-item label="IP">
+            <sdpi-textfield setting="ip" required></sdpi-textfield>
+        </sdpi-item>
+
+        <sdpi-item label="Port">
+            <sdpi-textfield setting="port" pattern="^[0-9]+$" required></sdpi-checkbox>
+        </sdpi-item>
+
+        <sdpi-item label="Message">
+			<sdpi-textfield maxlength=150 setting="message" required></sdpi-textfield>
+		</sdpi-item>
+    </body>
+</html>
