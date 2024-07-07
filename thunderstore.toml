@@ -19,7 +19,7 @@ outdir = "./build"
 
 [[build.copy]]
 source = "./SlipChat/bin/Release/netstandard2.1/com.mosadie.slipchat.dll"
-target = "BepInEx/plugins/MoSadie-SlipInfo/com.mosadie.slipchat.dll"
+target = "BepInEx/plugins/MoSadie-SlipChat/com.mosadie.slipchat.dll"
 
 [[build.copy]]
 source = "./CHANGELOG.md"
