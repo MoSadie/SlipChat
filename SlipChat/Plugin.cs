@@ -4,6 +4,7 @@ using BepInEx.Logging;
 using UnityEngine;
 using System;
 using System.Net;
+using System.Collections.Generic;
 
 namespace SlipChat
 {
@@ -19,7 +20,7 @@ namespace SlipChat
 
         internal static ManualLogSource Log;
 
-        public static readonly string COMPATIBLE_GAME_VERSION = "4.1556";
+        public static readonly string COMPATIBLE_GAME_VERSION = "4.1566";
 
         private void Awake()
         {
@@ -92,11 +93,11 @@ namespace SlipChat
                 string pathUrl = request.RawUrl.Split('?', 2)[0];
 
                 // Check if we are the captain and are seated on the helm
-                if (!getIsCaptainAndOnHelm()) // This also calls getIsCaptain() internally
+                if (!canUseAndOnHelm()) // This also calls getIsCaptain() internally
                 {
-                    Logger.LogInfo($"Captain Seat check failed. IsCaptain: {getIsCaptain()} AndOnHelm: {getIsCaptainAndOnHelm()}");
+                    Logger.LogInfo($"Captain Seat check failed. IsCaptain: {getIsCaptain()} AndOnHelm: {canUseAndOnHelm()}");
                     status = HttpStatusCode.Forbidden;
-                    responseString = "You are not the captain or are not seated on the helm.";
+                    responseString = "You are not the captain/first mate or are not seated on the helm.";
                 }
                 else
                 {
@@ -113,7 +114,7 @@ namespace SlipChat
                         message = VariableHandler.ParseVariables(message);
 
                         // Validate the message using EditableText
-                        if (EditableText.IsTextUnusable(message))
+                        if (!EditableText.IsTextUsable(message))
                         {
                             Logger.LogInfo($"Message is not usable: Null/Whitespace: {string.IsNullOrWhiteSpace(message)}. Null/Empty: {string.IsNullOrEmpty(message)}");
                             status = HttpStatusCode.BadRequest;
@@ -124,7 +125,7 @@ namespace SlipChat
                             // Actually send the message :)
                             if (!debugMode.Value)
                             {
-                                RequestCatalog.CaptainIssueOrder(OrderType.CUSTOM_MESSAGE, message, -1);
+                                RequestCatalog.CaptainIssueOrderAll(OrderType.CustomMessage, message);
                                 Logger.LogInfo($"Message sent: {message}");
                             }
                             else
@@ -198,27 +199,91 @@ namespace SlipChat
             }
         }
 
-        private static bool getIsCaptainAndOnHelm()
+        private static bool getIsFirstMate()
         {
-            if (!getIsCaptain())
+            try
+            {
+                MpSvc mpSvc = Svc.Get<MpSvc>();
+
+                if (mpSvc == null)
+                {
+                    Log.LogError("An error occurred handling self crew. null MpSvc.");
+                    return false;
+                }
+
+                MpClientController clients = Svc.Get<MpSvc>().Clients;
+
+                if (clients == null || clients.LocalClient == null)
+                {
+                    return false;
+                }
+                else
+                {
+                    return clients.LocalClient.Roles.Has(Roles.FirstMate);
+                }
+            } catch (Exception e)
+            {
+                Plugin.Log.LogError($"An error occurred while checking if the crewmate is the first mate: {e.Message}");
+                return false;
+            }
+        }
+
+        private static bool canUseAndOnHelm()
+        {
+            if (!getIsCaptain() || !getIsFirstMate())
             {
                 return false;
             }
 
             try
             {
-                MpCaptainController captains = Svc.Get<MpSvc>().Captains;
+                MpSvc mpSvc = Svc.Get<MpSvc>();
 
-                if (captains == null || captains.CaptainClient == null)
+                if (mpSvc == null)
                 {
+                    Log.LogError("An error occurred handling helm check. null MpSvc.");
                     return false;
                 }
 
-                return captains.CaptainClient.IsLocal && captains.IsCaptainAtHelm();
+                MpClientController clients = mpSvc.Clients;
+
+                if (clients == null)
+                {
+                    Log.LogWarning("An error occurred handling helm check. null Clients.");
+                    return false;
+                }
+
+                LocalSlipClient self = clients.LocalClient;
+
+                if (clients.LocalClient == null)
+                {
+                    Log.LogWarning("An error occurred handling helm check. null LocalClient.");
+                    return false;
+                }
+
+                List<Crewmate> crew = self.Crew;
+                
+                if (crew == null)
+                {
+                    Log.LogWarning("An error occurred handling helm check. null Crew list.");
+                    return false;
+                }
+
+                for (int i = 0; i < crew.Count; i++)
+                {
+                    if (crew[i] != null && crew[i].CurrentStation.Equals(StationType.Helm))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+
+
             }
             catch (Exception e)
             {
-                Plugin.Log.LogError($"An error occurred while checking if the crewmate is the captain and seated on the helm: {e.Message}");
+                Plugin.Log.LogError($"An error occurred while checking if the crewmate is the captain/first mate and seated on the helm: {e.Message}");
                 return false;
             }
         }

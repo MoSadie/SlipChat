@@ -1,3 +1,7 @@
+## v0.1.1
+
+Updated to support First Mate sending orders, and marking as compatible with the v1.80.0 Hotfix #1 update released on August 18th, 2024
+
 ## v0.1.0
 
 ### Initial (Testing) Release!
