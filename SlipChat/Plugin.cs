@@ -5,12 +5,13 @@ using UnityEngine;
 using System;
 using System.Net;
 using System.Collections.Generic;
+using MoCore;
 
 namespace SlipChat
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInProcess("Slipstream_Win.exe")]
-    public class Plugin : BaseUnityPlugin
+    public class Plugin : BaseUnityPlugin, MoPlugin
     {
         private static ConfigEntry<int> port;
 
@@ -21,6 +22,7 @@ namespace SlipChat
         internal static ManualLogSource Log;
 
         public static readonly string COMPATIBLE_GAME_VERSION = "4.1579";
+        public static readonly string GAME_VERSION_URL = "https://raw.githubusercontent.com/MoSadie/SlipChat/refs/heads/main/versions.json";
 
         private void Awake()
         {
@@ -28,10 +30,9 @@ namespace SlipChat
             {
                 Log = base.Logger;
 
-                Log.LogInfo($"Game version: {Application.version}");
-                if (Application.version != COMPATIBLE_GAME_VERSION)
+                if (!MoCore.MoCore.RegisterPlugin(this))
                 {
-                    Log.LogError($"This version of SlipChat is not compatible with the current game version. Please check for an updated version of the plugin.");
+                    Log.LogError("Failed to register plugin with MoCore. Please check the logs for more information.");
                     return;
                 }
 
@@ -300,6 +301,21 @@ namespace SlipChat
             // Stop server
             if (listener != null)
                 listener.Close();
+        }
+
+        public string GetCompatibleGameVersion()
+        {
+            return COMPATIBLE_GAME_VERSION;
+        }
+
+        public string GetVersionCheckUrl()
+        {
+            return GAME_VERSION_URL;
+        }
+
+        public BaseUnityPlugin GetPluginObject()
+        {
+            return this;
         }
     }
 }

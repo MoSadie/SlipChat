@@ -2,6 +2,12 @@
 
 Updated to support First Mate sending orders, and marking as compatible with the v1.90.0 update.
 
+Also added MoCore to enable the ability to manage compatible versions without having to make a new release every time.
+
+#### Known Issue
+
+- If the first mate and captain are both on the helm (so the first mate cannot see the helm screen) they can still send messages.
+
 ## v0.1.0
 
 ### Initial (Testing) Release!

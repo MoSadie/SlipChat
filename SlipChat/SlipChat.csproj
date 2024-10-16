@@ -30,4 +30,10 @@
       <HintPath>lib/UniTask.dll</HintPath>
     </Reference>
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="MoCore">
+      <HintPath>lib/com.mosadie.mocore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>
