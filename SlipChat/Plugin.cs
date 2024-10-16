@@ -10,6 +10,7 @@ using MoCore;
 namespace SlipChat
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    [BepInDependency("com.mosadie.mocore", BepInDependency.DependencyFlags.HardDependency)]
     [BepInProcess("Slipstream_Win.exe")]
     public class Plugin : BaseUnityPlugin, MoPlugin
     {
