@@ -20,7 +20,7 @@ namespace SlipChat
 
         internal static ManualLogSource Log;
 
-        public static readonly string COMPATIBLE_GAME_VERSION = "4.1566";
+        public static readonly string COMPATIBLE_GAME_VERSION = "4.1579";
 
         private void Awake()
         {
@@ -95,7 +95,7 @@ namespace SlipChat
                 // Check if we are the captain and are seated on the helm
                 if (!canUseAndOnHelm()) // This also calls getIsCaptain() internally
                 {
-                    Logger.LogInfo($"Captain Seat check failed. IsCaptain: {getIsCaptain()} AndOnHelm: {canUseAndOnHelm()}");
+                    Logger.LogInfo($"Captain Seat check failed. IsCaptain: {getIsCaptain()} IsFirstMate: {getIsFirstMate()} AndOnHelm: {canUseAndOnHelm()}");
                     status = HttpStatusCode.Forbidden;
                     responseString = "You are not the captain/first mate or are not seated on the helm.";
                 }
@@ -230,8 +230,9 @@ namespace SlipChat
 
         private static bool canUseAndOnHelm()
         {
-            if (!getIsCaptain() || !getIsFirstMate())
+            if (!(getIsCaptain() || getIsFirstMate()))
             {
+                Log.LogInfo("Not captain or first mate.");
                 return false;
             }
 
@@ -271,11 +272,15 @@ namespace SlipChat
 
                 for (int i = 0; i < crew.Count; i++)
                 {
-                    if (crew[i] != null && crew[i].CurrentStation.Equals(StationType.Helm))
+                    Log.LogInfo($"Checking crewmate {i}: {crew[i].Client.Player.DisplayName} {crew[i].CurrentStation.StationType}");
+                    if (crew[i] != null && crew[1].CurrentStation != null && crew[i].CurrentStation.StationType.Equals(StationType.Helm))
                     {
+                        Log.LogInfo("Found valid crew on helm.");
                         return true;
                     }
                 }
+
+                Log.LogInfo("No valid crew on helm.");
 
                 return false;
 
@@ -283,7 +288,8 @@ namespace SlipChat
             }
             catch (Exception e)
             {
-                Plugin.Log.LogError($"An error occurred while checking if the crewmate is the captain/first mate and seated on the helm: {e.Message}");
+                Log.LogError($"An error occurred while checking if the crewmate is the captain/first mate and seated on the helm: {e.Message}");
+                Log.LogError(e.StackTrace);
                 return false;
             }
         }
