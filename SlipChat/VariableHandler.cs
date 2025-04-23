@@ -39,7 +39,7 @@ namespace SlipChat
 
         internal static string GetVariableValue(string variable)
         {
-            // Variables: $captain, $randomCrew[id], $crew[id] $enemyName, $enemyIntel, $enemyInvaders, $enemyThreat, $enemySpeed, $enemyCargo, $campaignName, $sectorName, $version
+            // Variables: $captain, $randomCrew[id], $crew[id], $enemyName, $enemyIntel, $enemyInvaders, $enemyThreat, $enemySpeed, $enemyCargo, $campaignName, $sectorName, $version
             // $randomCrew is special, it takes an id as a parameter and returns a random crew member but is consistant for the same id.
             // $crew is similar to $randomCrew but returns the a crew member using the numerical id of the crew member.
 
@@ -151,16 +151,29 @@ namespace SlipChat
             }
 
             Dictionary<int, Crewmate> crew = Svc.Get<MpSvc>().Crew.CrewMap;
-            if (crew.Count == 0)
+            if (crew == null || crew.Count == 0)
             {
                 return "";
             }
 
             Random random = new Random();
-            Crewmate randomCrew = crew[random.Next(crew.Count)];
-            crewMap.Add(id, randomCrew.Client.Player.DisplayName);
+            int randomIndex = random.Next(0, crew.Count);
+            int i = 0;
+            Crewmate randomCrew = null;
+            foreach (KeyValuePair<int, Crewmate> kvp in crew)
+            {
+                randomCrew = kvp.Value;
+                if (i == randomIndex)
+                {
+                    break;
+                }
+                i++;
+            }
 
-            return randomCrew.Client.Player.DisplayName;
+            string crewName = randomCrew.Client.Player.DisplayName;
+
+            crewMap.Add(id, crewName);
+            return crewName;
         }
 
         internal static string GetCrewMember(string id)
