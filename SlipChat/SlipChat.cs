@@ -28,6 +28,7 @@ namespace SlipChat
         public static readonly string COMPATIBLE_GAME_VERSION = "4.1595";
         public static readonly string GAME_VERSION_URL = "https://raw.githubusercontent.com/MoSadie/SlipChat/refs/heads/main/versions.json";
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Is actually used.")]
         private void Awake()
         {
             try
@@ -111,12 +112,12 @@ namespace SlipChat
 
                 string pathUrl = request.RawUrl.Split('?', 2)[0];
 
-                bool ableToUse = canUseAndOnHelm();
+                bool ableToUse = CanUseAndOnHelm();
 
                 // Check if we are the captain and are seated on the helm
                 if (!ableToUse) // This also calls getIsCaptain() internally
                 {
-                    Logger.LogInfo($"Captain Seat check failed. IsCaptain: {getIsCaptain()} IsFirstMate: {getIsFirstMate()} AndOnHelm: {ableToUse}");
+                    Logger.LogInfo($"Captain Seat check failed. IsCaptain: {GetIsCaptain()} IsFirstMate: {GetIsFirstMate()} AndOnHelm: {ableToUse}");
                     status = HttpStatusCode.Forbidden;
                     responseString = "You are not the captain/first mate or are not seated on the helm.";
                 }
@@ -183,7 +184,7 @@ namespace SlipChat
             }
         }
 
-        private static bool getIsCaptain()
+        private static bool GetIsCaptain()
         {
             try
             {
@@ -216,7 +217,7 @@ namespace SlipChat
             }
         }
 
-        private static bool getIsFirstMate()
+        private static bool GetIsFirstMate()
         {
             try
             {
@@ -245,9 +246,9 @@ namespace SlipChat
             }
         }
 
-        private static bool canUseAndOnHelm()
+        private static bool CanUseAndOnHelm()
         {
-            if (!(getIsCaptain() || getIsFirstMate()))
+            if (!(GetIsCaptain() || GetIsFirstMate()))
             {
                 Log.LogInfo("Not captain or first mate.");
                 return false;
