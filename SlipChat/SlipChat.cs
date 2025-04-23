@@ -6,13 +6,14 @@ using System;
 using System.Net;
 using System.Collections.Generic;
 using MoCore;
+using System.Threading;
 
 namespace SlipChat
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInDependency("com.mosadie.mocore", BepInDependency.DependencyFlags.HardDependency)]
     [BepInProcess("Slipstream_Win.exe")]
-    public class Plugin : BaseUnityPlugin, MoPlugin
+    public class SlipChat : BaseUnityPlugin, MoPlugin
     {
         private static ConfigEntry<int> port;
 
@@ -22,9 +23,12 @@ namespace SlipChat
 
         internal static ManualLogSource Log;
 
-        public static readonly string COMPATIBLE_GAME_VERSION = "4.1579";
+        private Thread serverThread;
+
+        public static readonly string COMPATIBLE_GAME_VERSION = "4.1595";
         public static readonly string GAME_VERSION_URL = "https://raw.githubusercontent.com/MoSadie/SlipChat/refs/heads/main/versions.json";
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Is actually used.")]
         private void Awake()
         {
             try
@@ -55,9 +59,8 @@ namespace SlipChat
                 listener.Prefixes.Add($"http://127.0.0.1:{port.Value}/sendchat/");
                 listener.Prefixes.Add($"http://localhost:{port.Value}/sendchat/");
 
-                listener.Start();
-
-                listener.BeginGetContext(new AsyncCallback(HandleRequest), listener);
+                serverThread = new Thread(() => ServerThread(listener));
+                serverThread.Start();
 
                 Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 
@@ -77,15 +80,30 @@ namespace SlipChat
 
         }
 
-        private void HandleRequest(IAsyncResult result)
+        private void ServerThread(HttpListener listener)
+        {
+            try
+            {
+                listener.Start();
+
+                while (listener.IsListening)
+                {
+                    HttpListenerContext context = listener.GetContext();
+                    HandleRequest(context);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.LogError("An exception occurred in the http server thread.");
+                Log.LogError(e.Message);
+            }
+        }
+
+        private void HandleRequest(HttpListenerContext context)
         {
             Logger.LogInfo("Handling request");
             try
             {
-                HttpListener listener = (HttpListener)result.AsyncState;
-
-                HttpListenerContext context = listener.EndGetContext(result);
-
                 HttpListenerRequest request = context.Request;
                 HttpListenerResponse response = context.Response;
 
@@ -94,10 +112,12 @@ namespace SlipChat
 
                 string pathUrl = request.RawUrl.Split('?', 2)[0];
 
+                bool ableToUse = CanUseAndOnHelm();
+
                 // Check if we are the captain and are seated on the helm
-                if (!canUseAndOnHelm()) // This also calls getIsCaptain() internally
+                if (!ableToUse) // This also calls getIsCaptain() internally
                 {
-                    Logger.LogInfo($"Captain Seat check failed. IsCaptain: {getIsCaptain()} IsFirstMate: {getIsFirstMate()} AndOnHelm: {canUseAndOnHelm()}");
+                    Logger.LogInfo($"Captain Seat check failed. IsCaptain: {GetIsCaptain()} IsFirstMate: {GetIsFirstMate()} AndOnHelm: {ableToUse}");
                     status = HttpStatusCode.Forbidden;
                     responseString = "You are not the captain/first mate or are not seated on the helm.";
                 }
@@ -156,19 +176,15 @@ namespace SlipChat
                 output.Close();
 
                 VariableHandler.Reset();
-
-
-                // Start listening for the next request
-                listener.BeginGetContext(new AsyncCallback(HandleRequest), listener);
             }
             catch (Exception e)
             {
-                Log.LogError("An error occurred while handling the request.");
-                Log.LogError(e.Message);
+                Log.LogError("An error occurred while handling the request. " + e.Message);
+                Log.LogError(e.StackTrace);
             }
         }
 
-        private static bool getIsCaptain()
+        private static bool GetIsCaptain()
         {
             try
             {
@@ -196,12 +212,12 @@ namespace SlipChat
             }
             catch (Exception e)
             {
-                Plugin.Log.LogError($"An error occurred while checking if the crewmate is the captain: {e.Message}");
+                SlipChat.Log.LogError($"An error occurred while checking if the crewmate is the captain: {e.Message}");
                 return false;
             }
         }
 
-        private static bool getIsFirstMate()
+        private static bool GetIsFirstMate()
         {
             try
             {
@@ -225,14 +241,14 @@ namespace SlipChat
                 }
             } catch (Exception e)
             {
-                Plugin.Log.LogError($"An error occurred while checking if the crewmate is the first mate: {e.Message}");
+                SlipChat.Log.LogError($"An error occurred while checking if the crewmate is the first mate: {e.Message}");
                 return false;
             }
         }
 
-        private static bool canUseAndOnHelm()
+        private static bool CanUseAndOnHelm()
         {
-            if (!(getIsCaptain() || getIsFirstMate()))
+            if (!(GetIsCaptain() || GetIsFirstMate()))
             {
                 Log.LogInfo("Not captain or first mate.");
                 return false;
@@ -258,7 +274,7 @@ namespace SlipChat
 
                 LocalSlipClient self = clients.LocalClient;
 
-                if (clients.LocalClient == null)
+                if (self == null)
                 {
                     Log.LogWarning("An error occurred handling helm check. null LocalClient.");
                     return false;
@@ -274,11 +290,20 @@ namespace SlipChat
 
                 for (int i = 0; i < crew.Count; i++)
                 {
-                    Log.LogInfo($"Checking crewmate {i}: {crew[i].Client.Player.DisplayName} {crew[i].CurrentStation.StationType}");
-                    if (crew[i] != null && crew[1].CurrentStation != null && crew[i].CurrentStation.StationType.Equals(StationType.Helm))
+                    try
                     {
-                        Log.LogInfo("Found valid crew on helm.");
-                        return true;
+                        Log.LogInfo($"Checking crewmate {i}: {crew[i].Client.Player.DisplayName} {(crew[i].CurrentStation != null ? crew[i].CurrentStation.StationType : "No Station")}");
+                        if (crew[i] != null && crew[i].CurrentStation != null && crew[i].CurrentStation.StationType.Equals(StationType.Helm))
+                        {
+                            Log.LogInfo("Found valid crew on helm.");
+                            return true;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log.LogError($"An error occurred while checking crew member {i}: {e.Message}");
+                        Log.LogError(e.StackTrace);
+
                     }
                 }
 
@@ -299,7 +324,7 @@ namespace SlipChat
         private void ApplicationQuitting()
         {
             Logger.LogInfo("Stopping server");
-            // Stop server
+            // Stop server, the thread is looking for the listener to stop listening
             if (listener != null)
                 listener.Close();
         }

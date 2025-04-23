@@ -1,3 +1,9 @@
+## v1.0.0
+
+First major release!
+
+Updated to support the latest game version.
+
 ## v0.1.1
 
 Updated to support First Mate sending orders, and marking as compatible with the v1.90.0 update.
