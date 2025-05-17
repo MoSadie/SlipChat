@@ -13,7 +13,7 @@ export class SendAnnouncement extends SingletonAction<SendAnnouncementSettings> 
 	onWillAppear(ev: WillAppearEvent<SendAnnouncementSettings>): void | Promise<void> {
 		// Default settings check
 		let ip = ev.payload.settings.ip ?? "127.0.0.1";
-		let port = ev.payload.settings.port ?? 8002;
+		let port = ev.payload.settings.port ?? 8001;
 		let message = ev.payload.settings.message ?? "";
 
 		// Update the current count in the action's settings, and change the title.
@@ -29,10 +29,10 @@ export class SendAnnouncement extends SingletonAction<SendAnnouncementSettings> 
 	async onKeyDown(ev: KeyDownEvent<SendAnnouncementSettings>): Promise<void> {
 		await ev.action.setTitle(`Sending...`);
 		let ip = ev.payload.settings.ip ?? "127.0.0.1";
-		let port = ev.payload.settings.port ?? 8002;
+		let port = ev.payload.settings.port ?? 8001;
 		let message = ev.payload.settings.message ?? "";
 
-		let url = `http://${ip}:${port}/sendchat`;
+		let url = `http://${ip}:${port}/slipchat/sendchat`;
 
 		console.log("Sending message");
 		

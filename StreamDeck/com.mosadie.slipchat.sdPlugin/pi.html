@@ -2,7 +2,13 @@
 <html>
     <head lang="en">
         <meta charset="utf-8" />
-        <script src="https://cdn.jsdelivr.net/gh/geekyeggo/sdpi-components@v2/dist/sdpi-components.js"></script>
+        <script src="sdpi-components.js"></script>
+		<style>
+			.normal {
+				color: #d8d8d8;
+				font-family: "Segoe UI",Arial,Roboto,Helvetica sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+			}
+		</style>
     </head>
     <body>
         <sdpi-item label="IP">
@@ -16,5 +22,7 @@
         <sdpi-item label="Message">
 			<sdpi-textfield maxlength=150 setting="message" required></sdpi-textfield>
 		</sdpi-item>
+
+		<p class="normal">You can find information on variables on the <a class="normal" target="_blank" href="https://mosadie.link/SCwiki">GitHub Page</a>.</p>
     </body>
 </html>

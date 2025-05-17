@@ -13,17 +13,13 @@ namespace SlipChat
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInDependency("com.mosadie.mocore", BepInDependency.DependencyFlags.HardDependency)]
     [BepInProcess("Slipstream_Win.exe")]
-    public class SlipChat : BaseUnityPlugin, MoPlugin
+    public class SlipChat : BaseUnityPlugin, IMoPlugin, IMoHttpHandler
     {
-        private static ConfigEntry<int> port;
-
         private static ConfigEntry<bool> debugMode;
-
-        private static HttpListener listener = null;
 
         internal static ManualLogSource Log;
 
-        private Thread serverThread;
+        public static readonly string HTTP_PREFIX = "slipchat";
 
         public static readonly string COMPATIBLE_GAME_VERSION = "4.1595";
         public static readonly string GAME_VERSION_URL = "https://raw.githubusercontent.com/MoSadie/SlipChat/refs/heads/main/versions.json";
@@ -41,36 +37,9 @@ namespace SlipChat
                     return;
                 }
 
-                port = Config.Bind("Server Settings", "Port", 8002, "Port to listen on.");
-
                 debugMode = Config.Bind("Developer Settings", "Debug Mode", false, "Enable debug mode, preventing the game from actually sending the order.");
 
-
-                if (!HttpListener.IsSupported)
-                {
-                    Log.LogError("HttpListener is not supported on this platform.");
-                    listener = null;
-                    return;
-                }
-
-                // Start the http server
-                listener = new HttpListener();
-
-                listener.Prefixes.Add($"http://127.0.0.1:{port.Value}/sendchat/");
-                listener.Prefixes.Add($"http://localhost:{port.Value}/sendchat/");
-
-                serverThread = new Thread(() => ServerThread(listener));
-                serverThread.Start();
-
                 Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
-
-
-                Application.quitting += ApplicationQuitting;
-            }
-            catch (PlatformNotSupportedException e)
-            {
-                Log.LogError("HttpListener is not supported on this platform.");
-                Log.LogError(e.Message);
             }
             catch (Exception e)
             {
@@ -80,37 +49,27 @@ namespace SlipChat
 
         }
 
-        private void ServerThread(HttpListener listener)
-        {
-            try
-            {
-                listener.Start();
-
-                while (listener.IsListening)
-                {
-                    HttpListenerContext context = listener.GetContext();
-                    HandleRequest(context);
-                }
-            }
-            catch (Exception e)
-            {
-                Log.LogError("An exception occurred in the http server thread.");
-                Log.LogError(e.Message);
-            }
-        }
-
-        private void HandleRequest(HttpListenerContext context)
+        public HttpListenerResponse HandleRequest(HttpListenerRequest request, HttpListenerResponse response)
         {
             Logger.LogInfo("Handling request");
             try
             {
-                HttpListenerRequest request = context.Request;
-                HttpListenerResponse response = context.Response;
+                string path = request.Url.AbsolutePath.Trim('/');
+                string[] parts = path.Split('/');
 
-                HttpStatusCode status;
-                string responseString;
-
-                string pathUrl = request.RawUrl.Split('?', 2)[0];
+                if (parts.Length < 2 || parts[0] != HTTP_PREFIX)
+                {
+                    Logger.LogInfo("Invalid request path.");
+                    response.StatusCode = (int)HttpStatusCode.NotFound;
+                    response.Headers.Add("Access-Control-Allow-Origin", "*");
+                    return response;
+                } else if (parts[1] != "sendchat")
+                {
+                    Logger.LogInfo("Unknown request path.");
+                    response.StatusCode = (int)HttpStatusCode.NotFound;
+                    response.Headers.Add("Access-Control-Allow-Origin", "*");
+                    return response;
+                }
 
                 bool ableToUse = CanUseAndOnHelm();
 
@@ -118,8 +77,14 @@ namespace SlipChat
                 if (!ableToUse) // This also calls getIsCaptain() internally
                 {
                     Logger.LogInfo($"Captain Seat check failed. IsCaptain: {GetIsCaptain()} IsFirstMate: {GetIsFirstMate()} AndOnHelm: {ableToUse}");
-                    status = HttpStatusCode.Forbidden;
-                    responseString = "You are not the captain/first mate or are not seated on the helm.";
+                    response.StatusCode = (int)HttpStatusCode.Forbidden;
+                    response.Headers.Add("Access-Control-Allow-Origin", "*");
+                    string responseString = "You are not the captain/first mate or are not seated on the helm.";
+                    byte[] responseBuffer = System.Text.Encoding.UTF8.GetBytes(responseString);
+                    response.ContentLength64 = responseBuffer.Length;
+                    System.IO.Stream responseOutput = response.OutputStream;
+                    responseOutput.Write(responseBuffer, 0, responseBuffer.Length);
+                    return response;
                 }
                 else
                 {
@@ -139,8 +104,14 @@ namespace SlipChat
                         if (!EditableText.IsTextUsable(message))
                         {
                             Logger.LogInfo($"Message is not usable: Null/Whitespace: {string.IsNullOrWhiteSpace(message)}. Null/Empty: {string.IsNullOrEmpty(message)}");
-                            status = HttpStatusCode.BadRequest;
-                            responseString = "Message is not usable.";
+                            response.StatusCode = (int)HttpStatusCode.BadRequest;
+                            response.Headers.Add("Access-Control-Allow-Origin", "*");
+                            string responseString = "Message is not usable.";
+                            byte[] responseBuffer = System.Text.Encoding.UTF8.GetBytes(responseString);
+                            response.ContentLength64 = responseBuffer.Length;
+                            System.IO.Stream responseOutput = response.OutputStream;
+                            responseOutput.Write(responseBuffer, 0, responseBuffer.Length);
+                            return response;
                         }
                         else
                         {
@@ -153,34 +124,35 @@ namespace SlipChat
                             else
                                 Logger.LogInfo($"Debug mode enabled, message not sent: {message}");
 
-                            status = HttpStatusCode.OK;
-                            responseString = "Message sent!";
+                            response.StatusCode = (int)HttpStatusCode.OK;
+                            response.Headers.Add("Access-Control-Allow-Origin", "*");
+                            string responseString = "Message sent!";
+                            byte[] responseBuffer = System.Text.Encoding.UTF8.GetBytes(responseString);
+                            response.ContentLength64 = responseBuffer.Length;
+                            System.IO.Stream responseOutput = response.OutputStream;
+                            responseOutput.Write(responseBuffer, 0, responseBuffer.Length);
+                            return response;
                         }
                     }
                     else
                     {
-                        status = HttpStatusCode.BadRequest;
-                        responseString = "No message provided.";
+                        response.StatusCode = (int)HttpStatusCode.BadRequest;
+                        response.Headers.Add("Access-Control-Allow-Origin", "*");
+                        string responseString = "No message provided.";
+                        byte[] responseBuffer = System.Text.Encoding.UTF8.GetBytes(responseString);
+                        response.ContentLength64 = responseBuffer.Length;
+                        System.IO.Stream responseOutput = response.OutputStream;
+                        responseOutput.Write(responseBuffer, 0, responseBuffer.Length);
+                        return response;
                     }
                 }
-
-                response.StatusCode = (int)status;
-
-                response.Headers.Add("Access-Control-Allow-Origin", "*");
-
-                byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
-
-                response.ContentLength64 = buffer.Length;
-                System.IO.Stream output = response.OutputStream;
-                output.Write(buffer, 0, buffer.Length);
-                output.Close();
-
-                VariableHandler.Reset();
             }
             catch (Exception e)
             {
                 Log.LogError("An error occurred while handling the request. " + e.Message);
                 Log.LogError(e.StackTrace);
+
+                return response;
             }
         }
 
@@ -321,14 +293,6 @@ namespace SlipChat
             }
         }
 
-        private void ApplicationQuitting()
-        {
-            Logger.LogInfo("Stopping server");
-            // Stop server, the thread is looking for the listener to stop listening
-            if (listener != null)
-                listener.Close();
-        }
-
         public string GetCompatibleGameVersion()
         {
             return COMPATIBLE_GAME_VERSION;
@@ -342,6 +306,16 @@ namespace SlipChat
         public BaseUnityPlugin GetPluginObject()
         {
             return this;
+        }
+
+        public IMoHttpHandler GetHttpHandler()
+        {
+            return this;
+        }
+
+        public string GetPrefix()
+        {
+            return SlipChat.HTTP_PREFIX;
         }
     }
 }
