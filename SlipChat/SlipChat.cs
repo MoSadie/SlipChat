@@ -1,12 +1,10 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
-using UnityEngine;
 using System;
 using System.Net;
 using System.Collections.Generic;
 using MoCore;
-using System.Threading;
 
 namespace SlipChat
 {

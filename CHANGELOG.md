@@ -1,3 +1,9 @@
+## v1.0.1
+
+Updated to MoCore v2.0.1, which means **the default port has changed to 8001**. The defaults in the Stream Deck plugin have been updated to match, but existing actions will need to be updated to use the new port.
+
+The path has also changed to `/slipchat/sendchat`, so the new URL to send a message is `http://localhost:8001/slipchat/sendchat?message=<insert message here>`.
+
 ## v1.0.0
 
 First major release!
