@@ -1,13 +1,13 @@
 {
 	"Name": "SlipChat",
-	"Version": "0.1.0.0",
+	"Version": "1.0.1.0",
 	"Author": "MoSadie",
 	"Actions": [
 		{
-			"Name": "Send Announcement",
+			"Name": "Send Order",
 			"UUID": "com.mosadie.slipchat.sendannouncement",
 			"Icon": "imgs/actions/sendannouncement/icon",
-			"Tooltip": "Sends an announcement to the crew.",
+			"Tooltip": "Sends a custom order to the crew.",
 			"Controllers": [
 				"Keypad"
 			],
@@ -23,7 +23,7 @@
 	"Category": "SlipChat",
 	"CategoryIcon": "imgs/plugin/category-icon",
 	"CodePath": "bin/plugin.js",
-	"Description": "Send Slipstream Captain Announcements from your Stream Deck!",
+	"Description": "Send Slipstream Captain Orders from your Stream Deck!",
 	"Icon": "imgs/plugin/plugin-icon",
 	"SDKVersion": 2,
 	"Software": {
