@@ -7,7 +7,7 @@ Listens for an HTTP request and, after validating the message and other checks, 
 Send a GET request to `http://localhost:8001/sendchat?message=Hello%20World` to trigger an announcement of "Hello World" in-game.
 
 In addition to raw HTTP requests, there is also a Stream Deck Plugin to make custom orders.
-If you click the "Manual Download" button to download the zip file, inside should be a file ending in `.streamDeckPlugin` you can use to install the plugin. The default settings should work, just need to add a message.
+You can download it from the [Elgato Marketplace](https://marketplace.elgato.com/product/slipchat-b2fbb151-3209-40a5-9541-5a4e9b86cf11) or use the manual download button. Inside the zip should be a file ending in `.streamDeckPlugin` you can use to install the plugin. The default settings should work, just need to add a message.
 
 Current requirements to send a custom order:
 - Must be Captain or First Mate of the ship.
